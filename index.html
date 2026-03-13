@@ -6,139 +6,101 @@
     <style>
         body {
             margin: 0;
-            background: radial-gradient(circle at center, #05070a 0%, #000 100%);
+            background: #02040a;
             overflow: hidden;
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
-            color: white;
-            font-family: 'Courier New', Courier, monospace;
         }
 
         canvas {
             display: block;
-            cursor: grab;
-            filter: drop-shadow(0 0 50px rgba(0, 113, 227, 0.4));
+            filter: drop-shadow(0 0 10px #00f2fe);
         }
 
-        canvas:active {
-            cursor: grabbing;
-        }
-
-        .planet-info {
+        .dna-overlay {
             position: absolute;
-            bottom: 30px;
-            left: 30px;
+            top: 20px;
+            right: 20px;
+            color: #00f2fe;
+            font-family: 'Fira Code', monospace;
+            text-align: right;
             pointer-events: none;
-            text-transform: uppercase;
-            letter-spacing: 3px;
-            border-left: 2px solid #00f2fe;
-            padding-left: 15px;
-            animation: fadeIn 2s;
+            font-size: 12px;
+            border-right: 2px solid #00f2fe;
+            padding-right: 15px;
+            opacity: 0.7;
         }
-
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
-        h2 { font-size: 18px; margin: 0; }
-        p { font-size: 10px; opacity: 0.5; margin: 5px 0 0; }
     </style>
 </head>
 <body>
 
-    <div class="planet-info">
-        <h2>Planet X-81</h2>
-        <p>Type: Procedural Gas Giant<br>Status: Exploring...</p>
+    <div class="dna-overlay">
+        GENETIC_SEQUENCE: ACTIVE<br>
+        DATA_ENCRYPTION: 100%<br>
+        HELIX_STABILITY: OPTIMAL
     </div>
-    
-    <canvas id="planetCanvas"></canvas>
+
+    <canvas id="dnaCanvas"></canvas>
 
     <script>
-        const canvas = document.getElementById('planetCanvas');
+        const canvas = document.getElementById('dnaCanvas');
         const ctx = canvas.getContext('2d');
-        let width, height, planet;
-        const radius = 250;
 
-        function init() {
-            width = canvas.width = window.innerWidth;
-            height = canvas.height = window.innerHeight;
-            // গ্রহের উপরিভাগ তৈরি (প্রসিডিউরাল ম্যাপ)
-            planet = ctx.createRadialGradient(radius, radius, 0, radius, radius, radius);
-            planet.addColorStop(0, '#001a33'); // কোর
-            planet.addColorStop(0.3, '#004080'); // গভীর মহাসাগর
-            planet.addColorStop(0.5, '#0071e3'); // মহাসাগর
-            planet.addColorStop(0.6, '#ffd700'); // মহাদেশ (সোনা)
-            planet.addColorStop(0.7, '#fff'); // মেঘ
-            planet.addColorStop(1, '#000'); // মহাকাশ
-        }
+        canvas.width = 400;
+        canvas.height = window.innerHeight;
 
-        let mouseX = 0, mouseY = 0;
-        let isDragging = false;
-        let lastMouseX = 0, lastMouseY = 0;
-        let rotationX = 0, rotationY = 0;
-
-        // মাউস দিয়ে ঘোরানো
-        window.addEventListener('mousedown', (e) => {
-            isDragging = true;
-            lastMouseX = e.clientX;
-            lastMouseY = e.clientY;
-        });
-
-        window.addEventListener('mouseup', () => isDragging = false);
-
-        window.addEventListener('mousemove', (e) => {
-            if (isDragging) {
-                const deltaX = e.clientX - lastMouseX;
-                const deltaY = e.clientY - lastMouseY;
-                rotationY += deltaX * 0.01;
-                rotationX += deltaY * 0.01;
-                lastMouseX = e.clientX;
-                lastMouseY = e.clientY;
-            }
-        });
+        let rotation = 0;
+        const nodes = 30; // ডিএনএ-র ধাপ সংখ্যা
+        const spread = 80; // হেলিক্সের চওড়া
 
         function draw() {
-            ctx.clearRect(0, 0, width, height);
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            for (let i = 0; i < nodes; i++) {
+                const y = (i * (canvas.height / nodes)) + 20;
+                
+                // প্রথম স্ট্র্যান্ডের গাণিতিক হিসাব
+                const x1 = Math.sin(rotation + i * 0.5) * spread + canvas.width / 2;
+                const size1 = Math.cos(rotation + i * 0.5) * 5 + 8; // ৩ডি গভীরতা বোঝাতে সাইজ পরিবর্তন
+                const alpha1 = Math.cos(rotation + i * 0.5) * 0.5 + 0.5;
 
-            // গ্রহের ৩ডি রোটেশন ক্যালকুলেশন
-            ctx.save();
-            ctx.translate(width / 2, height / 2);
-            ctx.rotate(rotationY);
-            ctx.scale(1, Math.cos(rotationX));
+                // দ্বিতীয় স্ট্র্যান্ডের গাণিতিক হিসাব (১৮০ ডিগ্রি বা PI দূরত্বে)
+                const x2 = Math.sin(rotation + i * 0.5 + Math.PI) * spread + canvas.width / 2;
+                const size2 = Math.cos(rotation + i * 0.5 + Math.PI) * 5 + 8;
+                const alpha2 = Math.cos(rotation + i * 0.5 + Math.PI) * 0.5 + 0.5;
 
-            // গ্রহের ছায়া এবং আলো (Lighting & Shadows)
-            const shadow = ctx.createRadialGradient(-radius/2, -radius/2, 0, 0, 0, radius);
-            shadow.addColorStop(0, 'rgba(255, 255, 255, 0.2)'); // আলো
-            shadow.addColorStop(1, 'rgba(0, 0, 0, 0.8)'); // ছায়া
+                // কানেক্টিং লাইন (Hydrogen Bonds)
+                ctx.beginPath();
+                ctx.strokeStyle = `rgba(0, 242, 254, ${Math.min(alpha1, alpha2) * 0.3})`;
+                ctx.lineWidth = 2;
+                ctx.moveTo(x1, y);
+                ctx.lineTo(x2, y);
+                ctx.stroke();
 
-            // গ্রহ আঁকা
-            ctx.beginPath();
-            ctx.arc(0, 0, radius, 0, Math.PI * 2);
-            ctx.fillStyle = planet;
-            ctx.fill();
+                // প্রথম স্ট্র্যান্ডের বিন্দু
+                ctx.beginPath();
+                ctx.fillStyle = `rgba(0, 242, 254, ${alpha1})`;
+                ctx.arc(x1, y, Math.abs(size1/2), 0, Math.PI * 2);
+                ctx.fill();
 
-            // আলো-ছায়া লেয়ার
-            ctx.beginPath();
-            ctx.arc(0, 0, radius, 0, Math.PI * 2);
-            ctx.fillStyle = shadow;
-            ctx.fill();
-
-            ctx.restore();
-
-            // অটোমেটিক রোটেশন
-            if (!isDragging) {
-                rotationY += 0.005;
+                // দ্বিতীয় স্ট্র্যান্ডের বিন্দু (ভিন্ন কালার অ্যাকসেন্ট)
+                ctx.beginPath();
+                ctx.fillStyle = `rgba(255, 255, 255, ${alpha2})`;
+                ctx.arc(x2, y, Math.abs(size2/2), 0, Math.PI * 2);
+                ctx.fill();
             }
 
+            rotation += 0.03;
             requestAnimationFrame(draw);
         }
 
-        init();
         draw();
-        window.addEventListener('resize', init);
+
+        window.addEventListener('resize', () => {
+            canvas.height = window.innerHeight;
+        });
     </script>
 </body>
 </html>
